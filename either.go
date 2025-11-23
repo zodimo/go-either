@@ -81,3 +81,10 @@ func (e Either[L, R]) FlatMapRight(f func(R) Either[L, R]) Either[L, R] {
 	}
 	return Left[L, R](e.left)
 }
+
+func (e Either[L, R]) Match(left func(L) R, right func(R) R) R {
+	if e.IsLeft() {
+		return left(e.left)
+	}
+	return right(e.right)
+}

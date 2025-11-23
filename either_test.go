@@ -355,6 +355,113 @@ func TestHelperFlatMapRight(t *testing.T) {
 	})
 }
 
+func TestMatch(t *testing.T) {
+	t.Run("matches left value when either is left", func(t *testing.T) {
+		left := Left[string, int]("error")
+		result := left.Match(
+			func(s string) int {
+				return len(s)
+			},
+			func(i int) int {
+				return i * 2
+			},
+		)
+
+		if result != 5 {
+			t.Errorf("Expected match result to be 5 (length of 'error'), got %v", result)
+		}
+	})
+
+	t.Run("matches right value when either is right", func(t *testing.T) {
+		right := Right[string, int](42)
+		result := right.Match(
+			func(s string) int {
+				return len(s)
+			},
+			func(i int) int {
+				return i * 2
+			},
+		)
+
+		if result != 84 {
+			t.Errorf("Expected match result to be 84 (42 * 2), got %v", result)
+		}
+	})
+
+	t.Run("match with string return type", func(t *testing.T) {
+		left := Left[int, string](100)
+		result := left.Match(
+			func(i int) string {
+				return "left: " + string(rune(i+'0'))
+			},
+			func(s string) string {
+				return "right: " + s
+			},
+		)
+
+		expected := "left: " + string(rune(100+'0'))
+		if result != expected {
+			t.Errorf("Expected match result to be %v, got %v", expected, result)
+		}
+	})
+
+	t.Run("match with complex transformation", func(t *testing.T) {
+		right := Right[string, int](10)
+		result := right.Match(
+			func(s string) int {
+				return -1
+			},
+			func(i int) int {
+				return i*i + i
+			},
+		)
+
+		if result != 110 {
+			t.Errorf("Expected match result to be 110 (10*10 + 10), got %v", result)
+		}
+	})
+
+	t.Run("match preserves left value", func(t *testing.T) {
+		left := Left[string, int]("test")
+		result := left.Match(
+			func(s string) int {
+				if s != "test" {
+					t.Errorf("Expected left value to be 'test', got %v", s)
+				}
+				return 0
+			},
+			func(i int) int {
+				t.Error("Right function should not be called for left either")
+				return -1
+			},
+		)
+
+		if result != 0 {
+			t.Errorf("Expected match result to be 0, got %v", result)
+		}
+	})
+
+	t.Run("match preserves right value", func(t *testing.T) {
+		right := Right[string, int](99)
+		result := right.Match(
+			func(s string) int {
+				t.Error("Left function should not be called for right either")
+				return -1
+			},
+			func(i int) int {
+				if i != 99 {
+					t.Errorf("Expected right value to be 99, got %v", i)
+				}
+				return i
+			},
+		)
+
+		if result != 99 {
+			t.Errorf("Expected match result to be 99, got %v", result)
+		}
+	})
+}
+
 // Integration tests
 func TestEitherChaining(t *testing.T) {
 	t.Run("chains operations on left either", func(t *testing.T) {

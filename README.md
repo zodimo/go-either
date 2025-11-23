@@ -88,6 +88,24 @@ flatMapped := either.FlatMapRight(func(r R) Either[L, R] {
 })
 ```
 
+### Matching
+
+The `Match` function allows you to extract and transform the value from an Either, regardless of whether it's Left or Right. Both functions must return the same type:
+
+```go
+// Match on either value, transforming both to the same type
+result := either.Match(
+    func(l L) R {
+        // Transform left value to R
+        return transformedLeft
+    },
+    func(r R) R {
+        // Transform right value to R
+        return transformedRight
+    },
+)
+```
+
 ### Helper Functions
 
 The package also provides helper functions that return `Maybe[Either]` for type-changing operations:
@@ -136,6 +154,29 @@ if result.IsRight() {
     error := result.Left().UnwrapUnsafe()
     fmt.Printf("Error: %s\n", error)
 }
+```
+
+## Example: Using Match
+
+```go
+func divide(a, b int) either.Either[string, int] {
+    if b == 0 {
+        return either.Left[string, int]("division by zero")
+    }
+    return either.Right[string, int](a / b)
+}
+
+result := divide(10, 2)
+// Use Match to handle both cases and return a single value
+message := result.Match(
+    func(err string) string {
+        return "Error: " + err
+    },
+    func(value int) string {
+        return fmt.Sprintf("Success: %d", value)
+    },
+)
+fmt.Println(message) // Output: "Success: 5"
 ```
 
 ## Dependencies
