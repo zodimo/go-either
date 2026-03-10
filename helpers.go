@@ -25,3 +25,10 @@ func FlatMapRight[L, R, R2 any](e Either[L, R], f func(R) Either[L, R2]) Either[
 	}
 	return Left[L, R2](e.left)
 }
+
+func Match[L, R, T any](e Either[L, R], f func(L) T, g func(R) T) T {
+	if e.IsLeft() {
+		return f(e.left)
+	}
+	return g(e.right)
+}

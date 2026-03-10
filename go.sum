@@ -6,3 +6,5 @@ github.com/zodimo/go-maybe v0.1.3 h1:wEGtaSPkhTza+b0S+7J8C5nzkEB8KOoUK2dnQqA4ZEE
 github.com/zodimo/go-maybe v0.1.3/go.mod h1:xEqMthQw8lMcDFUWXBmrixQAhUL4SQBTqOQ5D/AlNyE=
 github.com/zodimo/go-maybe v0.1.4 h1:zeqWxdJ49CyNcAb7MmSY5KY9F6DHvTGmjk8+rMgoLJw=
 github.com/zodimo/go-maybe v0.1.4/go.mod h1:xEqMthQw8lMcDFUWXBmrixQAhUL4SQBTqOQ5D/AlNyE=
+github.com/zodimo/go-maybe v0.1.9 h1:267vkyhD8h0jxeT7oKeG7wNuc/k9SJKOf/qZdGwBHOs=
+github.com/zodimo/go-maybe v0.1.9/go.mod h1:xEqMthQw8lMcDFUWXBmrixQAhUL4SQBTqOQ5D/AlNyE=
