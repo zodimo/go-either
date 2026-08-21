@@ -1,6 +1,7 @@
 package either
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/zodimo/go-maybe"
@@ -83,4 +84,11 @@ func (e Either[L, R]) FlatMapRight[R2 any](f func(R) Either[L, R2]) Either[L, R2
 
 func (e Either[L, R]) Match[T any](left func(L) T, right func(R) T) T {
 	return Match(e, left, right)
+}
+
+func (e Either[L, R]) String() string {
+	if e.isLeft {
+		return fmt.Sprintf("Left[%T](%v)", e.left, e.left)
+	}
+	return fmt.Sprintf("Right[%T](%v)", e.right, e.right)
 }
