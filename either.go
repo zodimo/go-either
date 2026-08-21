@@ -57,34 +57,30 @@ func (e Either[L, R]) Right() maybe.Maybe[R] {
 	return maybe.None[R]()
 }
 
-func (e Either[L, R]) MapLeft(f func(L) L) Either[L, R] {
-	if e.IsLeft() {
-		return Left[L, R](f(e.left))
-	}
-	return Right[L, R](e.right)
-}
-func (e Either[L, R]) MapRight(f func(R) R) Either[L, R] {
-	if e.IsRight() {
-		return Right[L, R](f(e.right))
-	}
-	return Left[L, R](e.left)
-}
-func (e Either[L, R]) FlatMapLeft(f func(L) Either[L, R]) Either[L, R] {
-	if e.IsLeft() {
-		return f(e.left)
-	}
-	return Right[L, R](e.right)
-}
-func (e Either[L, R]) FlatMapRight(f func(R) Either[L, R]) Either[L, R] {
-	if e.IsRight() {
-		return f(e.right)
-	}
-	return Left[L, R](e.left)
+func (e Either[L, R]) MapLeft[L2 any](f func(L) L2) Either[L2, R] {
+	return MapLeft(e, f)
 }
 
-func (e Either[L, R]) Match(left func(L) R, right func(R) R) R {
-	if e.IsLeft() {
-		return left(e.left)
-	}
-	return right(e.right)
+func (e Either[L, R]) MapRight[R2 any](f func(R) R2) Either[L, R2] {
+	return MapRight(e, f)
+}
+
+func (e Either[L, R]) Map[R2 any](f func(R) R2) Either[L, R2] {
+	return MapRight(e, f)
+}
+
+func (e Either[L, R]) FlatMapLeft[L2 any](f func(L) Either[L2, R]) Either[L2, R] {
+	return FlatMapLeft(e, f)
+}
+
+func (e Either[L, R]) FlatMap[R2 any](f func(R) Either[L, R2]) Either[L, R2] {
+	return FlatMapRight(e, f)
+}
+
+func (e Either[L, R]) FlatMapRight[R2 any](f func(R) Either[L, R2]) Either[L, R2] {
+	return FlatMapRight(e, f)
+}
+
+func (e Either[L, R]) Match[T any](left func(L) T, right func(R) T) T {
+	return Match(e, left, right)
 }

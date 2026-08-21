@@ -1,6 +1,7 @@
 package either
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -505,4 +506,330 @@ func TestEitherChaining(t *testing.T) {
 			t.Errorf("Expected chained value to be 22, got %v", value)
 		}
 	})
+}
+
+// Method versions support type-changing mappings (L2 / R2).
+func TestMethodMapLeftChangingType(t *testing.T) {
+	t.Run("maps left value to a different type when either is left", func(t *testing.T) {
+		left := Left[string, int]("hello")
+		mapped := left.MapLeft(func(s string) int {
+			return len(s)
+		})
+
+		if !mapped.IsLeft() {
+			t.Error("Expected mapped either to be left")
+		}
+
+		leftMaybe := mapped.Left()
+		value := leftMaybe.UnwrapUnsafe()
+		if value != 5 {
+			t.Errorf("Expected mapped value to be 5, got %v", value)
+		}
+	})
+
+	t.Run("preserves right value when either is right", func(t *testing.T) {
+		right := Right[string, int](42)
+		mapped := right.MapLeft(func(s string) int {
+			return len(s)
+		})
+
+		if !mapped.IsRight() {
+			t.Error("Expected mapped either to remain right")
+		}
+
+		rightMaybe := mapped.Right()
+		value := rightMaybe.UnwrapUnsafe()
+		if value != 42 {
+			t.Errorf("Expected right value to remain 42, got %v", value)
+		}
+	})
+}
+
+func TestMethodMapRightChangingType(t *testing.T) {
+	t.Run("maps right value to a different type when either is right", func(t *testing.T) {
+		right := Right[string, int](42)
+		mapped := right.MapRight(func(i int) string {
+			return fmt.Sprintf("%d", i)
+		})
+
+		if !mapped.IsRight() {
+			t.Error("Expected mapped either to be right")
+		}
+
+		rightMaybe := mapped.Right()
+		value := rightMaybe.UnwrapUnsafe()
+		if value != "42" {
+			t.Errorf("Expected mapped value to be \"42\", got %q", value)
+		}
+	})
+
+	t.Run("preserves left value when either is left", func(t *testing.T) {
+		left := Left[string, int]("error")
+		mapped := left.MapRight(func(i int) string {
+			return "should not be called"
+		})
+
+		if !mapped.IsLeft() {
+			t.Error("Expected mapped either to remain left")
+		}
+
+		leftMaybe := mapped.Left()
+		value := leftMaybe.UnwrapUnsafe()
+		if value != "error" {
+			t.Errorf("Expected left value to remain \"error\", got %q", value)
+		}
+	})
+}
+
+// Map defaults to MapRight; FlatMap defaults to FlatMapRight.
+func TestMethodMap(t *testing.T) {
+	t.Run("maps right value to a different type when either is right", func(t *testing.T) {
+		right := Right[string, int](42)
+		mapped := right.Map(func(i int) string {
+			return fmt.Sprintf("%d", i)
+		})
+
+		if !mapped.IsRight() {
+			t.Error("Expected mapped either to be right")
+		}
+
+		rightMaybe := mapped.Right()
+		value := rightMaybe.UnwrapUnsafe()
+		if value != "42" {
+			t.Errorf("Expected mapped value to be \"42\", got %q", value)
+		}
+	})
+
+	t.Run("preserves left value when either is left", func(t *testing.T) {
+		left := Left[string, int]("error")
+		mapped := left.Map(func(i int) string {
+			return "should not be called"
+		})
+
+		if !mapped.IsLeft() {
+			t.Error("Expected mapped either to remain left")
+		}
+
+		leftMaybe := mapped.Left()
+		value := leftMaybe.UnwrapUnsafe()
+		if value != "error" {
+			t.Errorf("Expected left value to remain \"error\", got %q", value)
+		}
+	})
+}
+
+func TestMethodFlatMap(t *testing.T) {
+	t.Run("flat maps right value to a different right type when either is right", func(t *testing.T) {
+		right := Right[string, int](42)
+		mapped := right.FlatMap(func(i int) Either[string, string] {
+			return Right[string, string](fmt.Sprintf("%d", i))
+		})
+
+		if !mapped.IsRight() {
+			t.Error("Expected flat mapped either to be right")
+		}
+
+		rightMaybe := mapped.Right()
+		value := rightMaybe.UnwrapUnsafe()
+		if value != "42" {
+			t.Errorf("Expected flat mapped value to be \"42\", got %q", value)
+		}
+	})
+
+	t.Run("preserves left value when either is left", func(t *testing.T) {
+		left := Left[string, int]("error")
+		mapped := left.FlatMap(func(i int) Either[string, string] {
+			return Right[string, string]("should not be called")
+		})
+
+		if !mapped.IsLeft() {
+			t.Error("Expected result to remain left")
+		}
+
+		leftMaybe := mapped.Left()
+		value := leftMaybe.UnwrapUnsafe()
+		if value != "error" {
+			t.Errorf("Expected left value to remain \"error\", got %q", value)
+		}
+	})
+}
+
+func TestMethodFlatMapLeftChangingType(t *testing.T) {
+	t.Run("flat maps left value to a different left type when either is left", func(t *testing.T) {
+		left := Left[string, int]("hello")
+		mapped := left.FlatMapLeft(func(s string) Either[int, int] {
+			return Right[int, int](len(s))
+		})
+
+		if !mapped.IsRight() {
+			t.Error("Expected flat mapped either to be right")
+		}
+
+		rightMaybe := mapped.Right()
+		value := rightMaybe.UnwrapUnsafe()
+		if value != 5 {
+			t.Errorf("Expected flat mapped value to be 5, got %v", value)
+		}
+	})
+
+	t.Run("preserves right value when either is right", func(t *testing.T) {
+		right := Right[string, int](42)
+		mapped := right.FlatMapLeft(func(s string) Either[int, int] {
+			return Left[int, int](999)
+		})
+
+		if !mapped.IsRight() {
+			t.Error("Expected result to remain right")
+		}
+
+		rightMaybe := mapped.Right()
+		value := rightMaybe.UnwrapUnsafe()
+		if value != 42 {
+			t.Errorf("Expected right value to remain 42, got %v", value)
+		}
+	})
+}
+
+func TestMethodFlatMapRightChangingType(t *testing.T) {
+	t.Run("flat maps right value to a different right type when either is right", func(t *testing.T) {
+		right := Right[string, int](42)
+		mapped := right.FlatMapRight(func(i int) Either[string, string] {
+			return Right[string, string](fmt.Sprintf("%d", i))
+		})
+
+		if !mapped.IsRight() {
+			t.Error("Expected flat mapped either to be right")
+		}
+
+		rightMaybe := mapped.Right()
+		value := rightMaybe.UnwrapUnsafe()
+		if value != "42" {
+			t.Errorf("Expected flat mapped value to be \"42\", got %q", value)
+		}
+	})
+
+	t.Run("preserves left value when either is left", func(t *testing.T) {
+		left := Left[string, int]("error")
+		mapped := left.FlatMapRight(func(i int) Either[string, string] {
+			return Right[string, string]("should not be called")
+		})
+
+		if !mapped.IsLeft() {
+			t.Error("Expected result to remain left")
+		}
+
+		leftMaybe := mapped.Left()
+		value := leftMaybe.UnwrapUnsafe()
+		if value != "error" {
+			t.Errorf("Expected left value to remain \"error\", got %q", value)
+		}
+	})
+}
+
+// The package-level Match helper has no direct test yet; the method delegates
+// to it, so verify it directly.
+func TestHelperMatch(t *testing.T) {
+	t.Run("matches left value when either is left", func(t *testing.T) {
+		left := Left[string, int]("error")
+		result := Match(left,
+			func(s string) int {
+				return len(s)
+			},
+			func(i int) int {
+				return i * 2
+			},
+		)
+
+		if result != 5 {
+			t.Errorf("Expected match result to be 5, got %v", result)
+		}
+	})
+
+	t.Run("matches right value when either is right", func(t *testing.T) {
+		right := Right[string, int](42)
+		result := Match(right,
+			func(s string) int {
+				return len(s)
+			},
+			func(i int) int {
+				return i * 2
+			},
+		)
+
+		if result != 84 {
+			t.Errorf("Expected match result to be 84, got %v", result)
+		}
+	})
+}
+
+// Under Option A the methods are documented as delegating to the package-level
+// helpers; this test asserts they produce identical results.
+func TestMethodsDelegateToHelpers(t *testing.T) {
+	t.Run("MapLeft", func(t *testing.T) {
+		e := Left[string, int]("hello")
+		assertEqual(t, "MapLeft",
+			e.MapLeft(func(s string) int { return len(s) }),
+			MapLeft(e, func(s string) int { return len(s) }),
+		)
+	})
+
+	t.Run("MapRight", func(t *testing.T) {
+		e := Right[string, int](42)
+		assertEqual(t, "MapRight",
+			e.MapRight(func(i int) string { return fmt.Sprintf("%d", i) }),
+			MapRight(e, func(i int) string { return fmt.Sprintf("%d", i) }),
+		)
+	})
+
+	t.Run("FlatMapLeft", func(t *testing.T) {
+		e := Left[string, int]("hello")
+		assertEqual(t, "FlatMapLeft",
+			e.FlatMapLeft(func(s string) Either[int, int] { return Right[int, int](len(s)) }),
+			FlatMapLeft(e, func(s string) Either[int, int] { return Right[int, int](len(s)) }),
+		)
+	})
+
+	t.Run("FlatMapRight", func(t *testing.T) {
+		e := Right[string, int](42)
+		assertEqual(t, "FlatMapRight",
+			e.FlatMapRight(func(i int) Either[string, string] { return Left[string, string]("big") }),
+			FlatMapRight(e, func(i int) Either[string, string] { return Left[string, string]("big") }),
+		)
+	})
+
+	t.Run("Map delegates to MapRight", func(t *testing.T) {
+		e := Right[string, int](42)
+		assertEqual(t, "Map",
+			e.Map(func(i int) string { return fmt.Sprintf("%d", i) }),
+			MapRight(e, func(i int) string { return fmt.Sprintf("%d", i) }),
+		)
+	})
+
+	t.Run("FlatMap delegates to FlatMapRight", func(t *testing.T) {
+		e := Right[string, int](42)
+		assertEqual(t, "FlatMap",
+			e.FlatMap(func(i int) Either[string, string] { return Left[string, string]("big") }),
+			FlatMapRight(e, func(i int) Either[string, string] { return Left[string, string]("big") }),
+		)
+	})
+}
+
+func assertEqual[A, B comparable](t *testing.T, name string, got, want Either[A, B]) {
+	t.Helper()
+	if got.IsLeft() != want.IsLeft() || got.IsRight() != want.IsRight() {
+		t.Fatalf("%s: side mismatch, got left=%v right=%v, want left=%v right=%v",
+			name, got.IsLeft(), got.IsRight(), want.IsLeft(), want.IsRight())
+	}
+	if got.IsLeft() {
+		if got.Left().UnwrapUnsafe() != want.Left().UnwrapUnsafe() {
+			t.Fatalf("%s: left value mismatch, got %v, want %v",
+				name, got.Left().UnwrapUnsafe(), want.Left().UnwrapUnsafe())
+		}
+	}
+	if got.IsRight() {
+		if got.Right().UnwrapUnsafe() != want.Right().UnwrapUnsafe() {
+			t.Fatalf("%s: right value mismatch, got %v, want %v",
+				name, got.Right().UnwrapUnsafe(), want.Right().UnwrapUnsafe())
+		}
+	}
 }

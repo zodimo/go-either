@@ -29,11 +29,11 @@ right := either.Right[string, int](42)
 ### Checking the Value
 
 ```go
-if either.IsLeft() {
+if e.IsLeft() {
     // Handle left case
 }
 
-if either.IsRight() {
+if e.IsRight() {
     // Handle right case
 }
 ```
@@ -42,14 +42,14 @@ if either.IsRight() {
 
 ```go
 // Get the left value (returns Maybe[L])
-leftValue := either.Left()
+leftValue := e.Left()
 if leftValue.IsSome() {
     value := leftValue.UnwrapUnsafe()
     // Use value
 }
 
 // Get the right value (returns Maybe[R])
-rightValue := either.Right()
+rightValue := e.Right()
 if rightValue.IsSome() {
     value := rightValue.UnwrapUnsafe()
     // Use value
@@ -58,82 +58,108 @@ if rightValue.IsSome() {
 
 ### Mapping
 
+`MapLeft` and `MapRight` transform the value held in the Either. They can optionally change the mapped type (from `L` to `L2`, or `R` to `R2`) and are available both as methods and as package-level helper functions; the methods delegate to the helpers, so the two styles are interchangeable.
+
 ```go
-// Map over the left value
-mapped := either.MapLeft(func(l L) L {
-    // Transform left value
+// e is an Either[L, R]; map over the left value, optionally changing its type to L2
+mapped := e.MapLeft(func(l L) L2 {
     return transformed
 })
 
-// Map over the right value
-mapped := either.MapRight(func(r R) R {
-    // Transform right value
+// Map over the right value, optionally changing its type to R2
+mapped := e.MapRight(func(r R) R2 {
+    return transformed
+})
+```
+
+Mapping only runs when the Either holds a value on the mapped side; the other side is returned unchanged.
+
+#### `Map` (defaults to `MapRight`)
+
+`Map` is a right-biased convenience alias for `MapRight` — useful when Right represents the success value (the common case), and for forward-compatibility if the semantics ever change.
+
+```go
+mapped := e.Map(func(r R) R2 {
     return transformed
 })
 ```
 
 ### Flat Mapping
 
+`FlatMapLeft` and `FlatMapRight` chain operations that themselves return an `Either`, flattening the result. They support type changes and, like the map functions, exist as both methods and package-level helpers.
+
 ```go
-// Flat map over the left value
-flatMapped := either.FlatMapLeft(func(l L) Either[L, R] {
-    // Return a new Either based on left value
-    return either.Right[L, R](someValue)
+// Flat map over the left value, returning a new Either with a different left type
+flatMapped := e.FlatMapLeft(func(l L) Either[L2, R] {
+    return either.Right[L2, R](someValue)
 })
 
-// Flat map over the right value
-flatMapped := either.FlatMapRight(func(r R) Either[L, R] {
-    // Return a new Either based on right value
-    return either.Left[L, R]("error")
+// Flat map over the right value, returning a new Either with a different right type
+flatMapped := e.FlatMapRight(func(r R) Either[L, R2] {
+    return either.Left[L, R2]("error")
+})
+```
+
+#### `FlatMap` (defaults to `FlatMapRight`)
+
+`FlatMap` is a right-biased convenience alias for `FlatMapRight`:
+
+```go
+flatMapped := e.FlatMap(func(r R) Either[L, R2] {
+    return either.Left[L, R2]("error")
 })
 ```
 
 ### Matching
 
-The `Match` function allows you to extract and transform the value from an Either, regardless of whether it's Left or Right. Both functions must return the same type:
+The `Match` method (and its package-level helper) extract and transform the value from an Either, regardless of whether it's Left or Right. Both functions must return the same type `T`:
 
 ```go
-// Match on either value, transforming both to the same type
-result := either.Match(
-    func(l L) R {
-        // Transform left value to R
+// Match on either value, transforming both to the same type T
+result := e.Match(
+    func(l L) T {
         return transformedLeft
     },
-    func(r R) R {
-        // Transform right value to R
+    func(r R) T {
         return transformedRight
     },
 )
 ```
 
-### Helper Functions
+### Package-Level Helper Functions
 
-The package also provides helper functions that return `Maybe[Either]` for type-changing operations:
+Every method has a package-level helper equivalent. The methods simply delegate to these helpers, so both styles are interchangeable — use whichever reads better in your code.
 
 ```go
 // Map left to a different type
-result := either.MapLeft(either, func(l L) L2 {
-    // Transform to different type
+result := either.MapLeft(e, func(l L) L2 {
     return newValue
 })
 
 // Map right to a different type
-result := either.MapRight(either, func(r R) R2 {
-    // Transform to different type
+result := either.MapRight(e, func(r R) R2 {
     return newValue
 })
 
 // Flat map left to a different type
-result := either.FlatMapLeft(either, func(l L) Either[L2, R] {
-    // Return Either with different left type
+result := either.FlatMapLeft(e, func(l L) Either[L2, R] {
     return either.Right[L2, R](value)
 })
 
 // Flat map right to a different type
-result := either.FlatMapRight(either, func(r R) Either[L, R2] {
-    // Return Either with different right type
+result := either.FlatMapRight(e, func(r R) Either[L, R2] {
     return either.Left[L, R2]("error")
 })
+
+// Match either value to a single result
+result := either.Match(e,
+    func(l L) T {
+        return transformedLeft
+    },
+    func(r R) T {
+        return transformedRight
+    },
+)
 ```
 
 ## Example: Error Handling
