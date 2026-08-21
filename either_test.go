@@ -842,14 +842,29 @@ type Person struct {
 func TestString(t *testing.T) {
 	t.Run("formats Left[int, any]", func(t *testing.T) {
 		m := Left[int, any](42)
-		expected := "Left[int, <nil>](42)"
+		expected := "Left[int, interface {}](42)"
 		if m.String() != expected {
 			t.Errorf("Expected %q, got %q", expected, m.String())
 		}
 	})
 	t.Run("formats Right[any, int]", func(t *testing.T) {
 		m := Right[any, int](42)
-		expected := "Right[<nil>, int](42)"
+		expected := "Right[interface {}, int](42)"
+		if m.String() != expected {
+			t.Errorf("Expected %q, got %q", expected, m.String())
+		}
+	})
+
+	t.Run("formats Left[int, error]", func(t *testing.T) {
+		m := Left[int, error](42)
+		expected := "Left[int, error](42)"
+		if m.String() != expected {
+			t.Errorf("Expected %q, got %q", expected, m.String())
+		}
+	})
+	t.Run("formats Right[error, int]", func(t *testing.T) {
+		m := Right[error, int](42)
+		expected := "Right[error, int](42)"
 		if m.String() != expected {
 			t.Errorf("Expected %q, got %q", expected, m.String())
 		}
@@ -887,14 +902,14 @@ func TestString(t *testing.T) {
 
 	t.Run("formats Left[string, any]", func(t *testing.T) {
 		m := Left[string, any]("hello")
-		expected := "Left[string, <nil>](hello)"
+		expected := "Left[string, interface {}](hello)"
 		if m.String() != expected {
 			t.Errorf("Expected %q, got %q", expected, m.String())
 		}
 	})
 	t.Run("formats Right[any, string]", func(t *testing.T) {
 		m := Right[any, string]("hello")
-		expected := "Right[<nil>, string](hello)"
+		expected := "Right[interface {}, string](hello)"
 		if m.String() != expected {
 			t.Errorf("Expected %q, got %q", expected, m.String())
 		}
@@ -903,15 +918,16 @@ func TestString(t *testing.T) {
 	t.Run("formats Left[struct, any]", func(t *testing.T) {
 		p := Person{Name: "John", Age: 30}
 		m := Left[Person, any](p)
-		expected := "Left[either.Person, <nil>]({John 30})"
+		expected := "Left[either.Person, interface {}]({John 30})"
 		if m.String() != expected {
 			t.Errorf("Expected %q, got %q", expected, m.String())
 		}
 	})
+
 	t.Run("formats Right[any, struct]", func(t *testing.T) {
 		p := Person{Name: "John", Age: 30}
 		m := Right[any, Person](p)
-		expected := "Right[<nil>, either.Person]({John 30})"
+		expected := "Right[interface {}, either.Person]({John 30})"
 		if m.String() != expected {
 			t.Errorf("Expected %q, got %q", expected, m.String())
 		}

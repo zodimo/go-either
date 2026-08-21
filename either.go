@@ -10,30 +10,20 @@ import (
 type Either[L, R any] struct {
 	left    L
 	right   R
-	lType   reflect.Type
-	rType   reflect.Type
 	isLeft  bool
 	isRight bool
 }
 
 func Left[L, R any](left L) Either[L, R] {
-	rType := reflect.TypeOf((*R)(nil)).Elem()
-	lType := reflect.TypeOf((*L)(nil)).Elem()
 	return Either[L, R]{
 		left:    left,
 		isLeft:  true,
 		isRight: false,
-		rType:   rType,
-		lType:   lType,
 	}
 }
 func Right[L, R any](right R) Either[L, R] {
-	rType := reflect.TypeOf((*R)(nil)).Elem()
-	lType := reflect.TypeOf((*L)(nil)).Elem()
 	return Either[L, R]{
 		right:   right,
-		rType:   rType,
-		lType:   lType,
 		isLeft:  false,
 		isRight: true,
 	}
@@ -87,10 +77,10 @@ func (e Either[L, R]) Match[T any](left func(L) T, right func(R) T) T {
 }
 
 func (e Either[L, R]) String() string {
+	rType := reflect.TypeOf((*R)(nil)).Elem()
+	lType := reflect.TypeOf((*L)(nil)).Elem()
 	if e.isLeft {
-		var zeroR R
-		return fmt.Sprintf("Left[%T, %T](%v)", e.left, zeroR, e.left)
+		return fmt.Sprintf("Left[%s, %s](%v)", lType, rType, e.left)
 	}
-	var zeroL L
-	return fmt.Sprintf("Right[%T, %T](%v)", zeroL, e.right, e.right)
+	return fmt.Sprintf("Right[%s, %s](%v)", lType, rType, e.right)
 }
