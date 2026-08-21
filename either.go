@@ -88,7 +88,9 @@ func (e Either[L, R]) Match[T any](left func(L) T, right func(R) T) T {
 
 func (e Either[L, R]) String() string {
 	if e.isLeft {
-		return fmt.Sprintf("Left[%T](%v)", e.left, e.left)
+		var zeroR R
+		return fmt.Sprintf("Left[%T, %T](%v)", e.left, zeroR, e.left)
 	}
-	return fmt.Sprintf("Right[%T](%v)", e.right, e.right)
+	var zeroL L
+	return fmt.Sprintf("Right[%T, %T](%v)", zeroL, e.right, e.right)
 }
