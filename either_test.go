@@ -833,3 +833,57 @@ func assertEqual[A, B comparable](t *testing.T, name string, got, want Either[A,
 		}
 	}
 }
+
+type Person struct {
+	Name string
+	Age  int
+}
+
+func TestString(t *testing.T) {
+	t.Run("formats Left[int]", func(t *testing.T) {
+		m := Left[int, any](42)
+		expected := "Left[int](42)"
+		if m.String() != expected {
+			t.Errorf("Expected %q, got %q", expected, m.String())
+		}
+	})
+	t.Run("formats Right[int]", func(t *testing.T) {
+		m := Right[any, int](42)
+		expected := "Right[int](42)"
+		if m.String() != expected {
+			t.Errorf("Expected %q, got %q", expected, m.String())
+		}
+	})
+
+	t.Run("formats Left[string]", func(t *testing.T) {
+		m := Left[string, any]("hello")
+		expected := "Left[string](hello)"
+		if m.String() != expected {
+			t.Errorf("Expected %q, got %q", expected, m.String())
+		}
+	})
+	t.Run("formats Right[string]", func(t *testing.T) {
+		m := Right[any, string]("hello")
+		expected := "Right[string](hello)"
+		if m.String() != expected {
+			t.Errorf("Expected %q, got %q", expected, m.String())
+		}
+	})
+
+	t.Run("formats Left[struct]", func(t *testing.T) {
+		p := Person{Name: "John", Age: 30}
+		m := Left[Person, any](p)
+		expected := "Left[either.Person]({John 30})"
+		if m.String() != expected {
+			t.Errorf("Expected %q, got %q", expected, m.String())
+		}
+	})
+	t.Run("formats Right[struct]", func(t *testing.T) {
+		p := Person{Name: "John", Age: 30}
+		m := Right[any, Person](p)
+		expected := "Right[either.Person]({John 30})"
+		if m.String() != expected {
+			t.Errorf("Expected %q, got %q", expected, m.String())
+		}
+	})
+}
